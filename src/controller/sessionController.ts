@@ -281,7 +281,7 @@ export async function logOutSession(req: Request, res: Response) {
 
     setTimeout(async () => {
       const pathUserData = config.customUserDataDir + req.session;
-      const pathTokens = __dirname + `../../../tokens/${req.session}.data.json`;
+      const pathTokens = __dirname + `/../../tokens/${req.session}.data.json`;
 
       if (fs.existsSync(pathUserData)) {
         await fs.promises.rm(pathUserData, {
@@ -310,9 +310,11 @@ export async function logOutSession(req: Request, res: Response) {
         .status(200)
         .json({ status: true, message: 'Session successfully closed' });
     }, 500);
-    /*try {
+    try {
       await req.client.close();
-    } catch (error) {}*/
+    } catch (error) {
+      req.logger.error(error);
+    }
   } catch (error) {
     req.logger.error(error);
     return await res
