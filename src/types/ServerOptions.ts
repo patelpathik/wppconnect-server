@@ -66,4 +66,8 @@ export interface ServerOptions {
     secret_key: string | null;
     defaultBucketName: string | null;
   };
+  proxy: {
+    user: string;
+    pass: string;
+  };
 }

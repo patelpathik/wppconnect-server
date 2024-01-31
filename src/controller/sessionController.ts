@@ -185,10 +185,20 @@ export async function showAllSessions(req: Request, res: Response) {
   return res.status(200).json({ response: await getAllTokens(req) });
 }
 
-async function proxyConfig(countryCode: string, cityCode: string) {
-  const proxyUser = `${process.env.proxyUser}-cc-${countryCode}-city-${cityCode}`;
-  const proxyPass = process.env.proxyPass;
-  const proxyUrl = `http://${proxyUser}:${proxyPass}@pr.oxylabs.io:7777`;
+async function proxyConfig(req: Request) {
+  const defaultProxyCountry = 'IT';
+  const defaultProxyCity = 'milan';
+  const exp = new RegExp('[a-zA-Z]{2}', 'g');
+
+  if (!req.body.countryCode) req.body.countryCode = defaultProxyCountry;
+  else if (!req.body.countryCode.match(exp))
+    req.body.countryCode = defaultProxyCountry;
+
+  if (!req.body.cityCode) req.body.cityCode = defaultProxyCity;
+
+  const { user, pass } = req.serverOptions.proxy;
+  const proxyUser = `${user}-cc-${req.body.countryCode}-city-${req.body.cityCode}`;
+  const proxyUrl = `http://${proxyUser}:${pass}@pr.oxylabs.io:7777`;
 
   const newConfig = await anonymizeProxy(proxyUrl);
   return `--proxy-server=${newConfig}`;
@@ -224,24 +234,16 @@ export async function startSession(req: Request, res: Response) {
       }
      }
    */
-  const defaultProxyCountry = 'US';
-  const defaultProxyCity = 'chicago';
-  const exp = new RegExp('[a-zA-Z]{2}', 'g');
-
-  if (!req.body.countryCode) req.body.countryCode = defaultProxyCountry;
-  else if (!req.body.countryCode.match(exp))
-    req.body.countryCode = defaultProxyCountry;
-
-  if (!req.body.cityCode) req.body.cityCode = defaultProxyCity;
-
   const session = req.session;
   const { waitQrCode = false } = req.body;
-  const pConfig = await proxyConfig(req.body.countryCode, req.body.cityCode);
-  req.logger.info(`pConfig: ${pConfig}`);
-  req.serverOptions.createOptions.browserArgs = [
-    ...req.serverOptions.createOptions.browserArgs,
-    pConfig,
-  ];
+  if (req.serverOptions.proxy.user && req.serverOptions.proxy.pass) {
+    const pConfig = await proxyConfig(req);
+    req.logger.info(`pConfig: ${pConfig}`);
+    req.serverOptions.createOptions.browserArgs = [
+      ...req.serverOptions.createOptions.browserArgs,
+      pConfig,
+    ];
+  }
 
   await getSessionState(req, res);
   await SessionUtil.opendata(req, session, waitQrCode ? res : null);

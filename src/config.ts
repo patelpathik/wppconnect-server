@@ -102,4 +102,8 @@ export default {
     endpoint: null,
     forcePathStyle: null,
   },
+  proxy: {
+    user: '',
+    pass: '',
+  },
 };
