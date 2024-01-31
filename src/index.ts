@@ -16,6 +16,7 @@
 
 import { defaultLogger } from '@wppconnect-team/wppconnect';
 import cors from 'cors';
+import { configDotenv } from 'dotenv';
 import express, { NextFunction } from 'express';
 import boolParser from 'express-query-boolean';
 import { createServer } from 'http';
@@ -34,7 +35,7 @@ import {
 } from './util/functions';
 import { createLogger } from './util/logger';
 
-//require('dotenv').config();
+configDotenv();
 
 export const logger = createLogger(config.log);
 

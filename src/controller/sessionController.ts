@@ -17,6 +17,7 @@ import { Message, Whatsapp } from '@wppconnect-team/wppconnect';
 import { Request, Response } from 'express';
 import fs from 'fs';
 import mime from 'mime-types';
+import { anonymizeProxy } from 'proxy-chain';
 import QRCode from 'qrcode';
 import { Logger } from 'winston';
 
@@ -184,6 +185,15 @@ export async function showAllSessions(req: Request, res: Response) {
   return res.status(200).json({ response: await getAllTokens(req) });
 }
 
+async function proxyConfig(countryCode: string, cityCode: string) {
+  const proxyUser = `${process.env.proxyUser}-cc-${countryCode}-city-${cityCode}`;
+  const proxyPass = process.env.proxyPass;
+  const proxyUrl = `http://${proxyUser}:${proxyPass}@pr.oxylabs.io:7777`;
+
+  const newConfig = await anonymizeProxy(proxyUrl);
+  return `--proxy-server=${newConfig}`;
+}
+
 export async function startSession(req: Request, res: Response) {
   /**
    * #swagger.tags = ["Auth"]
@@ -214,8 +224,24 @@ export async function startSession(req: Request, res: Response) {
       }
      }
    */
+  const defaultProxyCountry = 'US';
+  const defaultProxyCity = 'chicago';
+  const exp = new RegExp('[a-zA-Z]{2}', 'g');
+
+  if (!req.body.countryCode) req.body.countryCode = defaultProxyCountry;
+  else if (!req.body.countryCode.match(exp))
+    req.body.countryCode = defaultProxyCountry;
+
+  if (!req.body.cityCode) req.body.cityCode = defaultProxyCity;
+
   const session = req.session;
   const { waitQrCode = false } = req.body;
+  const pConfig = await proxyConfig(req.body.countryCode, req.body.cityCode);
+  req.logger.info(`pConfig: ${pConfig}`);
+  req.serverOptions.createOptions.browserArgs = [
+    ...req.serverOptions.createOptions.browserArgs,
+    pConfig,
+  ];
 
   await getSessionState(req, res);
   await SessionUtil.opendata(req, session, waitQrCode ? res : null);
