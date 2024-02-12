@@ -10,6 +10,7 @@ export interface ServerOptions {
   tokenStoreType: string;
   maxListeners: number;
   customUserDataDir: string;
+  efsMountContainerPath: string;
   webhook: {
     url: string;
     autoDownload: boolean;
