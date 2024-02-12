@@ -25,6 +25,11 @@ import { Server as Socket } from 'socket.io';
 
 import { version } from '../package.json';
 import config from './config';
+import {
+  discardSessionArchive,
+  unzipSession,
+  zipSession,
+} from './controller/archiveController';
 import { convert } from './mapper/index';
 import routes from './routes';
 import {
@@ -61,7 +66,7 @@ export function initServer(serverOptions: any) {
   }
 
   // Add request options
-  app.use((req: any, res: any, next: NextFunction) => {
+  app.use(async (req: any, res: any, next: NextFunction) => {
     req.serverOptions = serverOptions;
     req.logger = logger;
     req.io = io as any;
@@ -85,6 +90,32 @@ export function initServer(serverOptions: any) {
       res.send = oldSend;
       return res.send(data);
     };
+
+    const archiveIgnoreRoutes: string[] = [
+      '/logout-session',
+      '/clear-session-data',
+      '/close-session',
+    ];
+
+    // unZip
+    if (req.route.path && req.session) {
+      const path: string = req.route.path;
+      if (!archiveIgnoreRoutes.some((r) => path.includes(r))) {
+        await unzipSession(req.session, req.serverOptions);
+      }
+    }
+
+    res.on('finish', async () => {
+      // Zip here for all/filter the requests
+      if (req.route.path && req.session) {
+        const path: string = req.route.path;
+        if (archiveIgnoreRoutes.some((r) => path.includes(r))) {
+          await discardSessionArchive(req.session, req.serverOptions);
+        } else {
+          await zipSession(req.session, req.serverOptions);
+        }
+      }
+    });
     next();
   });
 

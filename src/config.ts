@@ -8,6 +8,7 @@ export default {
   tokenStoreType: 'file',
   maxListeners: 15,
   customUserDataDir: './userDataDir/',
+  efsMountContainerPath: 'wpp-server', // * ref cf template MountPoints -> ContainerPath
   webhook: {
     url: null,
     autoDownload: true,
