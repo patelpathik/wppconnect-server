@@ -32,7 +32,7 @@ async function isExists(req: Request, target: string): Promise<boolean> {
 
 async function archiveSession(req: Request, serverOptions: ServerOptions) {
   const customerId = req.session;
-  req.logger.info(`ZIP SESSION::${customerId}`);
+  req.logger.info(`archiveSession::ZIP SESSION::${customerId}`);
   const DATA_PATH = serverOptions.customUserDataDir;
   let successFullyZipped = false;
   let retries = 0;
@@ -40,29 +40,29 @@ async function archiveSession(req: Request, serverOptions: ServerOptions) {
     try {
       // create SESSIONS_PATH directory if it doesn't exist
       const dirPath = SESSIONS_PATH(serverOptions);
-      req.logger.info(`dirPath ${dirPath}`);
+      req.logger.info(`archiveSession::dirPath ${dirPath}`);
       if (!(await isExists(req, dirPath))) {
-        req.logger.info(`create dir ${dirPath}`);
+        req.logger.info(`archiveSession::create dir ${dirPath}`);
         await fs.mkdir(dirPath, (err) => {
-          req.logger.info(`mkdir-error::${err}`);
+          req.logger.info(`archiveSession::mkdir-error::${err}`);
         });
       }
 
       const filePath = `${dirPath}/${customerId}.zip`;
-      req.logger.info(`filePath ${filePath}`);
-      req.logger.info(`cwd ${process.cwd()}`);
+      req.logger.info(`archiveSession::filePath ${filePath}`);
+      req.logger.info(`archiveSession::cwd ${process.cwd()}`);
       await tar.c({ file: filePath, cwd: DATA_PATH }, [`${customerId}`]);
       successFullyZipped = true;
-      req.logger.info(`zip complete`);
+      req.logger.info(`archiveSession::zip complete`);
     } catch (error) {
-      console.error(`Error in zipSession: ${JSON.stringify(error)}`);
+      req.logger.error(`Error in zipSession: ${JSON.stringify(error)}`);
       if (retries > MAX_RETRIES) {
-        console.error('Maximum number of retries reached. Exiting.');
+        req.logger.error('Maximum number of retries reached. Exiting.');
         break;
       }
       // increasing delayTime with every retry (exponential back-off)
       const delayTime = Math.pow(2, retries) * 1000;
-      console.info(`Retrying in ${delayTime / 1000} seconds...`);
+      req.logger.info(`Retrying in ${delayTime / 1000} seconds...`);
       await delay(delayTime);
       retries += 1;
     }
@@ -72,7 +72,7 @@ async function archiveSession(req: Request, serverOptions: ServerOptions) {
 
 async function extractSession(req: Request, serverOptions: ServerOptions) {
   const customerId = req.session;
-  req.logger.info(`UNZIP SESSION::${customerId}`);
+  req.logger.info(`extractSession::UNZIP SESSION::${customerId}`);
   const fileName = `${customerId}.zip`;
 
   const target = `${SESSIONS_PATH(serverOptions)}/${fileName}`;
@@ -88,25 +88,27 @@ async function extractSession(req: Request, serverOptions: ServerOptions) {
           file: target,
           cwd: DATA_PATH,
         });
-        req.logger.info(`target ${target}`);
-        req.logger.info(`cwd ${SESSIONS_PATH(serverOptions)}`);
+        req.logger.info(`extractSession::target ${target}`);
+        req.logger.info(`extractSession::cwd ${SESSIONS_PATH(serverOptions)}`);
         successFullyUnZipped = true;
-        req.logger.info(`unzip complete`);
+        req.logger.info(`extractSession::unzip complete`);
       } catch (error) {
-        console.error(`Error in unZipSession: ${JSON.stringify(error)}`);
+        req.logger.error(
+          `extractSession::Error in unZipSession: ${JSON.stringify(error)}`
+        );
         if (retries > MAX_RETRIES) {
-          console.error('Maximum number of retries reached. Exiting.');
+          req.logger.error('Maximum number of retries reached. Exiting.');
           break;
         }
         // increasing delayTime with every retry (exponential back-off)
         const delayTime = Math.pow(2, retries) * 1000;
-        console.info(`Retrying in ${delayTime / 1000} seconds...`);
+        req.logger.info(`Retrying in ${delayTime / 1000} seconds...`);
         await delay(delayTime);
         retries += 1;
       }
     }
   } else {
-    req.logger.info('extract skipped, file not found');
+    req.logger.info('extractSession::extract skipped, file not found');
   }
 }
 
@@ -115,18 +117,24 @@ async function discardSessionArchive(
   serverOptions: ServerOptions
 ) {
   const customerId = req.session;
-  req.logger.info(`DISCARD SESSION::${customerId}`);
+  req.logger.info(`discardSessionArchive::${customerId}`);
   const fileName = `${customerId}.zip`;
 
   const target = `${SESSIONS_PATH(serverOptions)}/${fileName}`;
-  req.logger.info(`target ${target}`);
+  req.logger.info(`discardSessionArchive::target ${target}`);
   fs.access(target, constants.F_OK, async (err) => {
     if (err) {
-      console.error(`archive not found at '${target}' to discard`);
+      req.logger.error(
+        `discardSessionArchive::archive not found at '${target}' to discard`
+      );
     } else {
       await fs.unlink(target, (err) => {
-        if (err) console.error(`target: ${target} delete error, ${err}`);
-        else console.error(`target: ${target} removed`);
+        if (err)
+          req.logger.error(
+            `discardSessionArchive::target: ${target} delete error, ${err}`
+          );
+        else
+          req.logger.error(`discardSessionArchive::target: ${target} removed`);
       });
     }
   });
@@ -135,17 +143,17 @@ async function discardSessionArchive(
 export async function handleOnInit(req: Request) {
   // unZip
   req.logger.info(
-    `req.session::${req.session}, req.params.session::${req.params.session}`
+    `handleOnInit::req.session::${req.session}, req.params.session::${req.params.session}`
   );
   if (req.session) {
     const path: string = req.originalUrl;
     req.logger.info(
-      `archiveIgnoreRoutes::${archiveIgnoreRoutes.some((r) =>
+      `handleOnInit::archiveIgnoreRoutes::${archiveIgnoreRoutes.some((r) =>
         path.includes(r)
       )}`
     );
     if (!archiveIgnoreRoutes.some((r) => path.includes(r))) {
-      req.logger.info('unzip');
+      req.logger.info('handleOnInit::unzip');
       await extractSession(req, req.serverOptions);
     }
   }
@@ -156,10 +164,10 @@ export async function handleOnFinish(req: Request) {
   if (req.session) {
     const path: string = req.originalUrl;
     if (archiveIgnoreRoutes.some((r) => path.includes(r))) {
-      req.logger.info('discard');
+      req.logger.info('handleOnFinish::discard');
       await discardSessionArchive(req, req.serverOptions);
     } else {
-      req.logger.info('zip');
+      req.logger.info('handleOnFinish::zip');
       await archiveSession(req, req.serverOptions);
     }
   }
