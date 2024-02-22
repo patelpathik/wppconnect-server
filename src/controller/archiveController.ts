@@ -167,8 +167,15 @@ export async function handleOnFinish(req: Request) {
       req.logger.info('handleOnFinish::discard');
       await discardSessionArchive(req, req.serverOptions);
     } else {
-      req.logger.info('handleOnFinish::zip');
-      await archiveSession(req, req.serverOptions);
+      const customerId = req.session;
+      const userDataDirPath = `${req.serverOptions.customUserDataDir}${customerId}`;
+      const exists = await isExists(req, userDataDirPath);
+      if (exists) {
+        req.logger.info('handleOnFinish::zip');
+        await archiveSession(req, req.serverOptions);
+      } else {
+        req.logger.info('handleOnFinish::ignore zip');
+      }
     }
   }
 }
