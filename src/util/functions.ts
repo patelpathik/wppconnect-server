@@ -228,9 +228,9 @@ export async function autoDownload(client: any, req: any, message: any) {
 
 export async function startAllSessions(config: any, logger: any) {
   try {
-    await api.post(
-      `${config.host}:${config.port}/api/${config.secretKey}/start-all`
-    );
+    const url = `${config.host}:${config.port}/api/${config.secretKey}/start-all`;
+    logger.info(`startAllSession::${url}`);
+    await api.post(url);
   } catch (e) {
     logger.error(e);
   }
