@@ -16,7 +16,7 @@ const SESSIONS_PATH = (serverOptions: ServerOptions) =>
 const archiveIgnoreRoutes: string[] = [
   '/logout-session',
   '/clear-session-data',
-  '/close-session',
+  // '/close-session',
 ];
 
 // * Utility promise to check path to file/dir exists or not (fs)
