@@ -4,6 +4,7 @@ import { constants } from 'fs/promises';
 import tar from 'tar';
 
 import { ServerOptions } from '../types/ServerOptions';
+// import CreateSessionUtil from '../util/createSessionUtil';
 
 const MAX_RETRIES = 5;
 
@@ -11,6 +12,9 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const SESSIONS_PATH = (serverOptions: ServerOptions) =>
   `../../../${serverOptions.efsMountContainerPath}/archives`;
+
+// const TOKENS_PATH = (serverOptions: ServerOptions) =>
+//   `../../../${serverOptions.efsMountContainerPath}/tokens`;
 
 // * List of routes to ignore archive/extract
 const archiveIgnoreRoutes: string[] = [
@@ -47,6 +51,15 @@ async function archiveSession(req: Request, serverOptions: ServerOptions) {
           req.logger.info(`archiveSession::mkdir-error::${err}`);
         });
       }
+      // // create TOKENS_PATH directory if it doesn't exist
+      // const tokenPath = TOKENS_PATH(serverOptions);
+      // req.logger.info(`archiveSession::tokenPath ${tokenPath}`);
+      // if (!(await isExists(req, tokenPath))) {
+      //   req.logger.info(`archiveSession::create dir ${tokenPath}`);
+      //   await fs.mkdir(tokenPath, (err) => {
+      //     req.logger.info(`archiveSession::mkdir-error::${err}`);
+      //   });
+      // }
 
       const filePath = `${dirPath}/${customerId}.zip`;
       req.logger.info(`archiveSession::filePath ${filePath}`);
@@ -54,6 +67,21 @@ async function archiveSession(req: Request, serverOptions: ServerOptions) {
       await tar.c({ file: filePath, cwd: DATA_PATH }, [`${customerId}`]);
       successFullyZipped = true;
       req.logger.info(`archiveSession::zip complete`);
+      // // copy token
+      // const tokenSrc = `/home/node/app/tokens/${customerId}.data.json`;
+      // const tokenDest = `${tokenPath}/${customerId}.data.json`;
+      // fs.copyFile(tokenSrc, tokenDest, (err) => {
+      //   if (err) req.logger.error(`archiveSession:: copy token error ${err}`);
+      //   req.logger.info('archiveSession::Token copied');
+      // });
+      // try {
+      //   await req.client.isConnected();
+      // } catch (error) {
+      //   console.log('archiveSession::not connected');
+      //   // const util = new CreateSessionUtil();
+      //   // await util.opendata(req, req.session);
+      //   // req.logger.info('archiveSession::connection opened');
+      // }
     } catch (error) {
       req.logger.error(`Error in zipSession: ${JSON.stringify(error)}`);
       if (retries > MAX_RETRIES) {
@@ -110,6 +138,13 @@ async function extractSession(req: Request, serverOptions: ServerOptions) {
   } else {
     req.logger.info('extractSession::extract skipped, file not found');
   }
+  // try {
+  //   await req.client.isConnected();
+  // } catch (error) {
+  //   console.log('extractSession::not connected');
+  //   // const util = new CreateSessionUtil();
+  //   // await util.opendata(req, req.session);
+  // }
 }
 
 async function discardSessionArchive(

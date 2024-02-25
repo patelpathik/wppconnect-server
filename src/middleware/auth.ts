@@ -68,12 +68,12 @@ const verifyToken = (req: Request, res: Response, next: NextFunction) => {
     bcrypt.compare(
       sessionDecrypt + secureToken,
       tokenDecrypt,
-      function (err, result) {
+      async function (err, result) {
         if (result) {
           req.session = formatSession(req.params.session);
           req.token = tokenDecrypt;
           req.client = clientsArray[req.session];
-          handleOnInit(req);
+          await handleOnInit(req);
           next();
         } else {
           return res
