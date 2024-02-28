@@ -16,7 +16,7 @@
 import bcrypt from 'bcrypt';
 import { NextFunction, Request, Response } from 'express';
 
-import { handleOnInit } from '../controller/archiveController';
+// import { handleOnInit } from '../controller/archiveController';
 import { clientsArray } from '../util/sessionUtil';
 
 function formatSession(session: string) {
@@ -73,7 +73,7 @@ const verifyToken = (req: Request, res: Response, next: NextFunction) => {
           req.session = formatSession(req.params.session);
           req.token = tokenDecrypt;
           req.client = clientsArray[req.session];
-          await handleOnInit(req);
+          // await handleOnInit(req);
           next();
         } else {
           return res
