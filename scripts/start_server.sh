@@ -8,6 +8,7 @@ yarn install
 # * build
 yarn build
 # * run
+pm2 kill
 pm2 start -f dist/server.js
 pm2 list
 # yarn start
