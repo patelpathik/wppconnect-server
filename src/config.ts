@@ -7,7 +7,7 @@ export default {
   startAllSession: true,
   tokenStoreType: 'file',
   maxListeners: 15,
-  customUserDataDir: './userDataDir/',
+  customUserDataDir: '/home/ec2-user/wpp-server-storage/user-data/',
   efsMountContainerPath: 'wpp-server', // * ref cf template MountPoints -> ContainerPath
   webhook: {
     url: null,

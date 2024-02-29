@@ -58,7 +58,7 @@ export const defaultFileTokenStoreOptions: FileTokenStoreOptions = {
   encodeFunction: JSON.stringify,
   encoding: 'utf8',
   fileExtension: '.data.json',
-  path: './tokens',
+  path: '/home/ec2-user/wpp-server-storage/tokens',
 };
 
 export class FileTokenStore implements TokenStore {
