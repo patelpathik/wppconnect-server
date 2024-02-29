@@ -5,6 +5,8 @@ cd /home/ec2-user/wpp-server
 echo "cwd::$(pwd)"
 # * install deps
 yarn install
+# ? sharp dependency https://github.com/variantlabs-io/halo/issues/2508
+npm install --arch=arm64 --platform=linuxmusl sharp
 # * build
 yarn build
 # * run
