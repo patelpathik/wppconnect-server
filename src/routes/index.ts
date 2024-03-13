@@ -898,4 +898,15 @@ routes.get('/unhealthy', HealthCheck.unhealthy);
 
 routes.get('/metrics', prometheusRegister.metrics);
 
+// 404
+routes.use('*', (req, res) => {
+  req.logger.info(
+    `404: ${req.method} ${req.originalUrl} ${JSON.stringify(
+      req.body
+    )} ${JSON.stringify(req.method)}`
+  );
+  res.status(404).send({
+    msg: 'unknown route',
+  });
+});
 export default routes;
