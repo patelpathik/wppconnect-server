@@ -25,7 +25,6 @@ import { Server as Socket } from 'socket.io';
 
 import { version } from '../package.json';
 import config from './config';
-import { handleOnFinish } from './controller/archiveController';
 import { convert } from './mapper/index';
 import routes from './routes';
 import {
@@ -87,7 +86,6 @@ export function initServer(serverOptions: any) {
       return res.send(data);
     };
 
-    res.on('finish', async () => await handleOnFinish(req));
     next();
   });
 
