@@ -373,28 +373,26 @@ export async function removeParticipant(req: Request, res: Response) {
       }
     }
    */
-  const { groupId, phone } = req.body;
+  // const { groupId, phone } = req.body;
 
   try {
-    let response = {};
-    const arrayGroups: any = [];
-
-    for (const group of groupToArray(groupId)) {
-      response = await req.client.removeParticipant(
-        group,
-        contactToArray(phone)
-      );
-      arrayGroups.push(response);
-    }
-
-    return res.status(200).json({
-      status: 'success',
-      response: {
-        message: 'Participant(s) removed successfully',
-        participants: phone,
-        groups: arrayGroups,
-      },
-    });
+    // let response = {};
+    // const arrayGroups: any = [];
+    // for (const group of groupToArray(groupId)) {
+    //   response = await req.client.removeParticipant(
+    //     group,
+    //     contactToArray(phone)
+    //   );
+    //   arrayGroups.push(response);
+    // }
+    // return res.status(200).json({
+    //   status: 'success',
+    //   response: {
+    //     message: 'Participant(s) removed successfully',
+    //     participants: phone,
+    //     groups: arrayGroups,
+    //   },
+    // });
   } catch (e) {
     req.logger.error(e);
     return res.status(500).json({
